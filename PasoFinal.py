@@ -1,7 +1,7 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox
 import pandas as pd
-from pandastable import Table, TableModel
+from pandastable import Table  # Importamos la clase Table de la biblioteca pandastable
 
 def leer_archivo(archivo):
     # Leer el archivo Excel y devolver un DataFrame
@@ -33,7 +33,6 @@ def encontrar_codigos_faltantes(archivo1, archivo2):
         if any(codigos_faltantes):
             resultados.append([id_producto, *codigos_faltantes, archivo1])  # Agregar el nombre del archivo
 
-
     return resultados
 
 def cargar_archivo(entrada):
@@ -59,12 +58,43 @@ def mostrar_resultados():
 
     messagebox.showinfo("Información", "Los resultados se han mostrado en la tabla.")
 
-def descargar_resultados():
-    archivo_salida = 'resultados.xlsx'
+def descargar_resultados_excel():
+    archivo_salida_xlsx = 'resultados.xlsx'
+    
     resultados = encontrar_codigos_faltantes(entry_archivo1.get(), entry_archivo2.get())
     df_resultados = pd.DataFrame(resultados)
-    df_resultados.to_excel(archivo_salida, index=False)
-    messagebox.showinfo("Información", f"Los resultados se han descargado como '{archivo_salida}'.")
+    
+    # Guardar resultados en un archivo Excel
+    df_resultados.to_excel(archivo_salida_xlsx, index=False)
+    messagebox.showinfo("Información", f"Los resultados se han descargado como '{archivo_salida_xlsx}'.")
+
+def descargar_resultados_csv():
+    archivo_salida_txt = 'resultadosFinalCincoFinal.txt'
+    
+    resultados = encontrar_codigos_faltantes(entry_archivo1.get(), entry_archivo2.get())
+    
+    # Eliminar la última columna de cada fila
+    resultados_sin_ultima_columna = [row[:-1] for row in resultados]
+
+    # Crear una lista de cadenas de texto con los resultados
+    lineas_resultados = [f'{row[0]+";;"}{";".join(str(codigo).replace(",", "").replace(".", "") for codigo in row[1:] if codigo != "0")};;\n' for row in resultados_sin_ultima_columna if any(codigo != "0" for codigo in row[1:])]
+
+    # Guardar las líneas de resultados en un archivo de texto
+    with open(archivo_salida_txt, 'w') as file:
+        file.writelines(lineas_resultados)
+    
+    messagebox.showinfo("Información", f"La salida TXT se ha generado como '{archivo_salida_txt}'.")
+
+
+
+
+
+
+
+def ejecutar_completo():
+    mostrar_resultados()
+    descargar_resultados_excel()
+    descargar_resultados_csv()
 
 # Configurar la interfaz gráfica
 root = tk.Tk()
@@ -73,7 +103,7 @@ root.title("Comparador de Archivos Excel")
 # Entrada para el primer archivo
 frame_archivo1 = tk.Frame(root)
 frame_archivo1.pack(pady=10)
-label_archivo1 = tk.Label(frame_archivo1, text="Archivo 1:")
+label_archivo1 = tk.Label(frame_archivo1, text="Suizo:")
 label_archivo1.pack(side="left", padx=(10,5))
 entry_archivo1 = tk.Entry(frame_archivo1, width=50)
 entry_archivo1.pack(side="left", padx=5)
@@ -83,7 +113,7 @@ button_archivo1.pack(side="left", padx=(5,10))
 # Entrada para el segundo archivo
 frame_archivo2 = tk.Frame(root)
 frame_archivo2.pack(pady=10)
-label_archivo2 = tk.Label(frame_archivo2, text="Archivo 2:")
+label_archivo2 = tk.Label(frame_archivo2, text="Base 2:")
 label_archivo2.pack(side="left", padx=(10,5))
 entry_archivo2 = tk.Entry(frame_archivo2, width=50)
 entry_archivo2.pack(side="left", padx=5)
@@ -94,8 +124,17 @@ button_archivo2.pack(side="left", padx=(5,10))
 button_mostrar_resultados = tk.Button(root, text="Mostrar resultados", command=mostrar_resultados)
 button_mostrar_resultados.pack(pady=10)
 
-# Botón para descargar resultados
-button_descargar = tk.Button(root, text="Descargar resultados como Excel", command=descargar_resultados)
-button_descargar.pack(pady=10)
+# Botón para descargar resultados como Excel
+button_descargar_excel = tk.Button(root, text="Descargar resultados como Excel", command=descargar_resultados_excel)
+button_descargar_excel.pack(pady=5)
+
+# Botón para descargar resultados como CSV
+button_descargar_csv = tk.Button(root, text="Descargar resultados como CSV", command=descargar_resultados_csv)
+button_descargar_csv.pack(pady=5)
+
+# Botón para ejecutar todo el proceso
+button_ejecutar_completo = tk.Button(root, text="Ejecutar completo", command=ejecutar_completo)
+button_ejecutar_completo.pack(pady=10)
 
 root.mainloop()
+
